@@ -1,13 +1,12 @@
 {
-  description = "logos-lez-registry-module — Qt6 Logos Core plugin for the LEZ Program Registry";
+  description = "logos-lez-registry-module — Qt6 Logos Core plugin and standalone app for LEZ Program Registry";
 
   inputs = {
     nixpkgs.follows = "logos-liblogos/nixpkgs";
 
     logos-liblogos.url = "github:logos-co/logos-liblogos";
-    logos-core.url     = "github:logos-co/logos-cpp-sdk";
-
-    logos-module-viewer.url = "github:logos-co/logos-module-viewer";
+    logos-cpp-sdk.url = "github:logos-co/logos-cpp-sdk";
+    logos-capability-module.url = "github:logos-co/logos-capability-module";
 
     lez-registry-ffi.url = "github:jimmy-claw/lez-registry?dir=lez-registry-ffi";
   };
@@ -16,141 +15,70 @@
     {
       self,
       nixpkgs,
-      logos-core,
+      logos-cpp-sdk,
       logos-liblogos,
-      logos-module-viewer,
+      logos-capability-module,
       lez-registry-ffi,
       ...
     }:
     let
-      lib = nixpkgs.lib;
-
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
-      ];
-
-      forAll = lib.genAttrs systems;
-
-      mkPkgs = system: import nixpkgs { inherit system; };
+      systems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
+      forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f {
+        pkgs = import nixpkgs { inherit system; };
+        logosSdk = logos-cpp-sdk.packages.${system}.default;
+        logosLiblogos = logos-liblogos.packages.${system}.default;
+        logosCapabilityModule = logos-capability-module.packages.${system}.default;
+        lezRegistryFfi = lez-registry-ffi.packages.${system}.default;
+      });
     in
     {
-      packages = forAll (
-        system:
+      packages = forAllSystems ({ pkgs, logosSdk, logosLiblogos, logosCapabilityModule, lezRegistryFfi }:
         let
-          pkgs     = mkPkgs system;
-          llvmPkgs = pkgs.llvmPackages;
+          common = import ./nix/default.nix {
+            inherit pkgs logosSdk logosLiblogos;
+          };
+          src = ./.;
 
-          logosCore      = logos-core.packages.${system}.default;
-          lezRegistryFfi = lez-registry-ffi.packages.${system}.default;
+          lib = import ./nix/lib.nix {
+            inherit pkgs common src logosSdk logosLiblogos lezRegistryFfi;
+          };
 
-          lezRegistryModule = pkgs.stdenv.mkDerivation {
-            pname   = "lez-registry-module";
-            version = "0.1.0";
-            src     = ./.;
-
-            nativeBuildInputs = [
-              pkgs.cmake
-              pkgs.ninja
-              pkgs.pkg-config
-              pkgs.qt6.wrapQtAppsHook
-            ];
-
-            buildInputs = [
-              pkgs.qt6.qtbase
-              pkgs.qt6.qtremoteobjects
-              pkgs.qt6.qtdeclarative
-              pkgs.qt6.qttools
-              llvmPkgs.clang
-              llvmPkgs.libclang
-              lezRegistryFfi
-            ]
-            ++ lib.optionals pkgs.stdenv.isDarwin [
-              pkgs.libiconv
-              pkgs.cacert
-            ];
-
-            LIBCLANG_PATH = "${llvmPkgs.libclang.lib}/lib";
-            CLANG_PATH    = "${llvmPkgs.clang}/bin/clang";
-            SSL_CERT_FILE =
-              lib.optionalString pkgs.stdenv.isDarwin
-              "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-
-            cmakeFlags = [
-              "-DLOGOS_CORE_ROOT=${logosCore}"
-              "-DLEZ_REGISTRY_LIB=${lezRegistryFfi}/lib"
-              "-DLEZ_REGISTRY_INCLUDE=${lezRegistryFfi}/include"
-            ];
-
-            meta = {
-              description = "LEZ Program Registry — Logos Core Qt6 plugin";
-              homepage    = "https://github.com/jimmy-claw/logos-lez-registry-module";
-              license     = lib.licenses.mit;
-            };
+          app = import ./nix/app.nix {
+            inherit pkgs common src logosLiblogos logosSdk logosCapabilityModule lezRegistryFfi;
+            lezRegistryModule = lib;
           };
         in
         {
-          lib     = lezRegistryModule;
-          default = lezRegistryModule;
+          lib = lib;
+          app = app;
+          default = lib;
         }
       );
 
-      apps = forAll (
-        system:
-        let
-          pkgs                  = mkPkgs system;
-          lezRegistryModuleLib  = self.packages.${system}.lib;
-          logosModuleViewer     = logos-module-viewer.packages.${system}.default;
-          ext =
-            if pkgs.stdenv.isDarwin then "dylib"
-            else if pkgs.stdenv.hostPlatform.isWindows then "dll"
-            else "so";
-          inspectModule = {
-            type    = "app";
-            program =
-              "${pkgs.writeShellScriptBin "inspect-module" ''
-                exec ${logosModuleViewer}/bin/logos-module-viewer \
-                  --module ${lezRegistryModuleLib}/lib/liblez_registry_module.${ext}
-              ''}/bin/inspect-module";
-          };
-        in
-        {
-          inspect-module = inspectModule;
-          default        = inspectModule;
-        }
-      );
+      devShells = forAllSystems ({ pkgs, logosSdk, logosLiblogos, lezRegistryFfi, ... }: {
+        default = pkgs.mkShell {
+          nativeBuildInputs = [
+            pkgs.cmake
+            pkgs.ninja
+            pkgs.pkg-config
+          ];
+          buildInputs = [
+            pkgs.qt6.qtbase
+            pkgs.qt6.qtremoteobjects
+            pkgs.qt6.qtdeclarative
+            pkgs.zstd
+            pkgs.krb5
+            pkgs.abseil-cpp
+          ];
 
-      devShells = forAll (
-        system:
-        let
-          pkgs           = mkPkgs system;
-          pkg            = self.packages.${system}.default;
-          logosCore      = logos-core.packages.${system}.default;
-          lezRegistryFfi = lez-registry-ffi.packages.${system}.default;
-        in
-        {
-          default = pkgs.mkShell {
-            inputsFrom = [ pkg ];
-
-            inherit (pkg) LIBCLANG_PATH CLANG_PATH;
-
-            LOGOS_CORE_ROOT      = "${logosCore}";
-            LEZ_REGISTRY_LIB     = "${lezRegistryFfi}/lib";
-            LEZ_REGISTRY_INCLUDE = "${lezRegistryFfi}/include";
-
-            shellHook = ''
-              echo ""
-              echo "=== logos-lez-registry-module Dev Shell ==="
-              echo "LOGOS_CORE_ROOT:      $LOGOS_CORE_ROOT"
-              echo "LEZ_REGISTRY_LIB:     $LEZ_REGISTRY_LIB"
-              echo "LEZ_REGISTRY_INCLUDE: $LEZ_REGISTRY_INCLUDE"
-              echo "-------------------------------------------"
-              echo "Run: just build"
-            '';
-          };
-        }
-      );
+          shellHook = ''
+            export LOGOS_CPP_SDK_ROOT="${logosSdk}"
+            export LOGOS_LIBLOGOS_ROOT="${logosLiblogos}"
+            export LEZ_REGISTRY_LIB="${lezRegistryFfi}/lib"
+            export LEZ_REGISTRY_INCLUDE="${lezRegistryFfi}/include"
+            echo "LEZ Registry Module development environment"
+          '';
+        };
+      });
     };
 }
