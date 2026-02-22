@@ -22,11 +22,11 @@ Rectangle {
 
     // ── Layout ────────────────────────────────────────────────────────────────
     height:  cardColumn.implicitHeight + 24
-    radius:  6
-    color:   mouseArea.containsMouse ? "#2a2a3a" : "#1e1e2e"
+    radius:  Theme.spacing.radiusLarge
+    color:   mouseArea.containsMouse ? Theme.palette.backgroundSecondary : Theme.palette.backgroundTertiary
 
     border {
-        color: mouseArea.containsMouse ? "#7c6af5" : "#3a3a4a"
+        color: mouseArea.containsMouse ? Theme.palette.primary : Theme.palette.borderSecondary
         width: 1
     }
 
@@ -47,18 +47,18 @@ Rectangle {
             left:   parent.left
             right:  parent.right
             top:    parent.top
-            margins: 12
+            margins: Theme.spacing.medium
         }
-        spacing: 4
+        spacing: Theme.spacing.tiny
 
         // Name + Version row
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacing.small
 
             Text {
                 text: root.programName || "(unnamed)"
-                color: "#e0e0ff"
+                color: Theme.palette.text
                 font { pixelSize: 15; bold: true; family: "monospace" }
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -66,7 +66,7 @@ Rectangle {
 
             Text {
                 text: "v" + (root.programVersion || "?")
-                color: "#888aaa"
+                color: Theme.palette.textSecondary
                 font.pixelSize: 12
             }
         }
@@ -77,7 +77,7 @@ Rectangle {
             text: "by " + (root.programAuthor.length > 16
                            ? root.programAuthor.substring(0, 8) + "…" + root.programAuthor.slice(-6)
                            : root.programAuthor)
-            color: "#7c6af5"
+            color: Theme.palette.primary
             font.pixelSize: 11
         }
 
@@ -87,7 +87,7 @@ Rectangle {
             text: root.programDesc.length > 120
                   ? root.programDesc.substring(0, 120) + "…"
                   : root.programDesc
-            color: "#aaaacc"
+            color: Theme.palette.textSecondary
             font.pixelSize: 12
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
@@ -101,14 +101,14 @@ Rectangle {
             Rectangle {
                 width: idlLabel.implicitWidth + 10
                 height: 18
-                radius: 4
-                color: "#2a3a2a"
-                border { color: "#4a8a4a"; width: 1 }
+                radius: Theme.spacing.tiny
+                color: "#1a2e1a"
+                border { color: Theme.palette.success; width: 1 }
                 Text {
                     id: idlLabel
                     anchors.centerIn: parent
                     text: "IDL"
-                    color: "#6ad06a"
+                    color: Theme.palette.success
                     font.pixelSize: 10
                 }
             }

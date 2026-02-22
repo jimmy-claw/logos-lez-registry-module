@@ -16,7 +16,7 @@ Item {
     property string programDesc:    ""
     property string programId:      ""
     property string idlCid:         ""
-    property string idlContent:     ""   // populated after "Fetch IDL"
+    property string idlContent:     ""
     property bool   idlLoading:     false
     property string idlError:       ""
 
@@ -26,8 +26,8 @@ Item {
 
     // ── Layout ────────────────────────────────────────────────────────────────
     ColumnLayout {
-        anchors { fill: parent; margins: 16 }
-        spacing: 12
+        anchors { fill: parent; margins: Theme.spacing.large }
+        spacing: Theme.spacing.medium
 
         // ── Toolbar ──────────────────────────────────────────────────────────
         RowLayout {
@@ -39,7 +39,7 @@ Item {
                 onClicked: root.backRequested()
                 contentItem: Text {
                     text: parent.text
-                    color: "#7c6af5"
+                    color: Theme.palette.primary
                     font.pixelSize: 13
                 }
                 background: Rectangle { color: "transparent" }
@@ -49,13 +49,13 @@ Item {
 
             Text {
                 text: "Program Detail"
-                color: "#888aaa"
+                color: Theme.palette.textSecondary
                 font.pixelSize: 13
             }
         }
 
         // ── Divider ───────────────────────────────────────────────────────────
-        Rectangle { height: 1; color: "#3a3a4a"; Layout.fillWidth: true }
+        Rectangle { height: 1; color: Theme.palette.borderSecondary; Layout.fillWidth: true }
 
         // ── Scroll area for metadata ──────────────────────────────────────────
         ScrollView {
@@ -70,27 +70,27 @@ Item {
                 // Name + version
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: Theme.spacing.small
 
                     Text {
                         text: root.programName || "(unnamed)"
-                        color: "#e0e0ff"
+                        color: Theme.palette.text
                         font { pixelSize: 22; bold: true; family: "monospace" }
                         Layout.fillWidth: true
                         elide: Text.ElideRight
                     }
 
                     Rectangle {
-                        width:  versionText.implicitWidth + 12
+                        width:  versionText.implicitWidth + Theme.spacing.medium
                         height: 22
-                        radius: 4
-                        color:  "#2a2a3a"
-                        border { color: "#5a5a7a"; width: 1 }
+                        radius: Theme.spacing.tiny
+                        color:  Theme.palette.backgroundSecondary
+                        border { color: Theme.palette.borderSecondary; width: 1 }
                         Text {
                             id: versionText
                             anchors.centerIn: parent
                             text: "v" + (root.programVersion || "?")
-                            color: "#aaaacc"
+                            color: Theme.palette.textSecondary
                             font.pixelSize: 12
                         }
                     }
@@ -108,7 +108,7 @@ Item {
 
                     Text {
                         text: label
-                        color: "#666688"
+                        color: Theme.palette.textTertiary
                         font { pixelSize: 11; capitalization: Font.AllUppercase }
                         letterSpacing: 0.8
                     }
@@ -117,7 +117,7 @@ Item {
                         readOnly:   true
                         selectByMouse: true
                         text:       value
-                        color:      "#ccccee"
+                        color:      Theme.palette.textSecondary
                         font { pixelSize: 13; family: mono ? "monospace" : "" }
                         wrapMode:   TextEdit.Wrap
                         Layout.fillWidth: true
@@ -134,7 +134,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     visible: root.idlCid.length > 0
-                    spacing: 8
+                    spacing: Theme.spacing.small
 
                     Button {
                         text: root.idlLoading ? "Fetching…" : "Fetch IDL"
@@ -143,15 +143,15 @@ Item {
 
                         contentItem: Text {
                             text: parent.text
-                            color: parent.enabled ? "#7c6af5" : "#555566"
+                            color: parent.enabled ? Theme.palette.primary : Theme.palette.textTertiary
                             font.pixelSize: 13
                             horizontalAlignment: Text.AlignHCenter
                         }
 
                         background: Rectangle {
-                            color:  parent.pressed ? "#3a3a5a" : (parent.hovered ? "#2a2a4a" : "#1e1e3a")
-                            radius: 4
-                            border { color: "#7c6af5"; width: 1 }
+                            color:  parent.pressed ? Theme.palette.primaryPressed : (parent.hovered ? Theme.palette.primaryHover : Theme.palette.backgroundTertiary)
+                            radius: Theme.spacing.tiny
+                            border { color: Theme.palette.primary; width: 1 }
                         }
                     }
 
@@ -166,7 +166,7 @@ Item {
                 Text {
                     visible: root.idlError.length > 0
                     text:    "Error: " + root.idlError
-                    color:   "#ff6666"
+                    color:   Theme.palette.error
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -176,20 +176,20 @@ Item {
                 Rectangle {
                     visible: root.idlContent.length > 0
                     Layout.fillWidth: true
-                    height: Math.min(idlText.implicitHeight + 16, 300)
-                    color: "#111122"
-                    radius: 4
-                    border { color: "#3a3a5a"; width: 1 }
+                    height: Math.min(idlText.implicitHeight + Theme.spacing.large, 300)
+                    color: Theme.palette.backgroundTertiary
+                    radius: Theme.spacing.tiny
+                    border { color: Theme.palette.borderSecondary; width: 1 }
                     clip: true
 
                     ScrollView {
-                        anchors { fill: parent; margins: 8 }
+                        anchors { fill: parent; margins: Theme.spacing.small }
                         TextEdit {
                             id: idlText
                             readOnly:      true
                             selectByMouse: true
                             text:          root.idlContent
-                            color:         "#aaffaa"
+                            color:         Theme.palette.success
                             font { pixelSize: 11; family: "monospace" }
                             wrapMode:      TextEdit.NoWrap
                             background:    null

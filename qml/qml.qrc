@@ -1,6 +1,8 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource prefix="/lez-registry">
+    <file>qmldir</file>
+    <file>Theme.qml</file>
     <file>LezRegistryView.qml</file>
     <file>ProgramCard.qml</file>
     <file>ProgramDetail.qml</file>

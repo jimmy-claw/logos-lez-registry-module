@@ -28,7 +28,7 @@ Item {
     }
 
     ColumnLayout {
-        anchors { fill: parent; margins: 16 }
+        anchors { fill: parent; margins: Theme.spacing.large }
         spacing: 10
 
         // ── Toolbar ──────────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ Item {
 
             Text {
                 text: "Register Program"
-                color: "#e0e0ff"
+                color: Theme.palette.text
                 font { pixelSize: 18; bold: true }
                 Layout.fillWidth: true
             }
@@ -48,14 +48,14 @@ Item {
                 onClicked: root.cancelled()
                 contentItem: Text {
                     text: parent.text
-                    color: "#888aaa"
+                    color: Theme.palette.textSecondary
                     font.pixelSize: 13
                 }
                 background: Rectangle { color: "transparent" }
             }
         }
 
-        Rectangle { height: 1; color: "#3a3a4a"; Layout.fillWidth: true }
+        Rectangle { height: 1; color: Theme.palette.borderSecondary; Layout.fillWidth: true }
 
         ScrollView {
             Layout.fillWidth: true
@@ -79,13 +79,13 @@ Item {
                     RowLayout {
                         Text {
                             id: fieldLabel
-                            color: "#888aaa"
+                            color: Theme.palette.textSecondary
                             font { pixelSize: 11; capitalization: Font.AllUppercase }
                         }
                         Text {
                             visible: required
                             text: " *"
-                            color: "#ff6666"
+                            color: Theme.palette.error
                             font.pixelSize: 11
                         }
                     }
@@ -93,16 +93,16 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 34
-                        color: "#111122"
-                        radius: 4
-                        border { color: inputField.activeFocus ? "#7c6af5" : "#3a3a4a"; width: 1 }
+                        color: Theme.palette.backgroundTertiary
+                        radius: Theme.spacing.tiny
+                        border { color: inputField.activeFocus ? Theme.palette.primary : Theme.palette.borderSecondary; width: 1 }
 
                         TextField {
                             id: inputField
-                            anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                            anchors { fill: parent; leftMargin: Theme.spacing.small; rightMargin: Theme.spacing.small }
                             background: null
-                            color: "#e0e0ff"
-                            placeholderTextColor: "#555566"
+                            color: Theme.palette.text
+                            placeholderTextColor: Theme.palette.textTertiary
                             font.pixelSize: 13
                         }
                     }
@@ -136,25 +136,25 @@ Item {
 
                     Text {
                         text: "DESCRIPTION"
-                        color: "#888aaa"
+                        color: Theme.palette.textSecondary
                         font { pixelSize: 11; capitalization: Font.AllUppercase }
                     }
 
                     Rectangle {
                         Layout.fillWidth: true
                         height: 80
-                        color: "#111122"
-                        radius: 4
-                        border { color: descField.activeFocus ? "#7c6af5" : "#3a3a4a"; width: 1 }
+                        color: Theme.palette.backgroundTertiary
+                        radius: Theme.spacing.tiny
+                        border { color: descField.activeFocus ? Theme.palette.primary : Theme.palette.borderSecondary; width: 1 }
 
                         ScrollView {
                             anchors { fill: parent; margins: 6 }
                             TextArea {
                                 id: descField
                                 background: null
-                                color: "#e0e0ff"
+                                color: Theme.palette.text
                                 placeholderText: "Short description of the program…"
-                                placeholderTextColor: "#555566"
+                                placeholderTextColor: Theme.palette.textTertiary
                                 font.pixelSize: 13
                                 wrapMode: TextArea.Wrap
                             }
@@ -179,7 +179,7 @@ Item {
                 Text {
                     visible: root.submitError.length > 0
                     text: "Error: " + root.submitError
-                    color: "#ff6666"
+                    color: Theme.palette.error
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -188,7 +188,7 @@ Item {
                 Text {
                     visible: root.submitResult.length > 0
                     text: "✓ " + root.submitResult
-                    color: "#6ad06a"
+                    color: Theme.palette.success
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -222,16 +222,16 @@ Item {
 
                         contentItem: Text {
                             text: parent.text
-                            color: parent.enabled ? "#ffffff" : "#555566"
+                            color: parent.enabled ? "#ffffff" : Theme.palette.textTertiary
                             font { pixelSize: 13; bold: true }
                             horizontalAlignment: Text.AlignHCenter
                         }
 
                         background: Rectangle {
                             color:  parent.enabled
-                                    ? (parent.pressed ? "#5a4ad5" : (parent.hovered ? "#6a5ae5" : "#7c6af5"))
-                                    : "#2a2a3a"
-                            radius: 4
+                                    ? (parent.pressed ? Theme.palette.primaryPressed : (parent.hovered ? Theme.palette.primaryHover : Theme.palette.primary))
+                                    : Theme.palette.backgroundSecondary
+                            radius: Theme.spacing.tiny
                         }
                     }
                 }

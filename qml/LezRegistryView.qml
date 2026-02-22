@@ -24,7 +24,7 @@ Item {
     // ── Root background ────────────────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent
-        color: "#16161e"
+        color: Theme.palette.background
     }
 
     // ── Header ─────────────────────────────────────────────────────────────────
@@ -32,33 +32,33 @@ Item {
         id: header
         anchors { left: parent.left; right: parent.right; top: parent.top }
         height: 56
-        color: "#1a1a2a"
-        border { color: "#2a2a3a"; width: 0 }
+        color: Theme.palette.backgroundSecondary
+        border { color: Theme.palette.borderSecondary; width: 0 }
 
         RowLayout {
-            anchors { fill: parent; leftMargin: 16; rightMargin: 16 }
+            anchors { fill: parent; leftMargin: Theme.spacing.large; rightMargin: Theme.spacing.large }
             spacing: 10
 
             // Logo / Title
             Text {
                 text: "⬡ LEZ Registry"
-                color: "#7c6af5"
+                color: Theme.palette.primary
                 font { pixelSize: 18; bold: true; family: "monospace" }
             }
 
             // Live count badge
             Rectangle {
                 visible: lezRegistryModel.count > 0
-                width:  countText.implicitWidth + 12
+                width:  countText.implicitWidth + Theme.spacing.medium
                 height: 20
                 radius: 10
-                color: "#2a2a4a"
+                color: Theme.palette.backgroundSecondary
 
                 Text {
                     id: countText
                     anchors.centerIn: parent
                     text: lezRegistryModel.count + " programs"
-                    color: "#888aaa"
+                    color: Theme.palette.textSecondary
                     font.pixelSize: 11
                 }
             }
@@ -81,14 +81,14 @@ Item {
 
                 contentItem: Text {
                     text: parent.text
-                    color: parent.enabled ? "#7c6af5" : "#444466"
+                    color: parent.enabled ? Theme.palette.primary : Theme.palette.textTertiary
                     font.pixelSize: 18
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                 }
                 background: Rectangle {
-                    color: parent.hovered ? "#2a2a4a" : "transparent"
-                    radius: 4
+                    color: parent.hovered ? Theme.palette.backgroundSecondary : "transparent"
+                    radius: Theme.spacing.tiny
                 }
                 width: 32; height: 32
             }
@@ -101,14 +101,14 @@ Item {
 
                 contentItem: Text {
                     text: parent.text
-                    color: "#7c6af5"
+                    color: Theme.palette.primary
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignHCenter
                 }
                 background: Rectangle {
-                    color:  parent.hovered ? "#2a2a4a" : "transparent"
-                    radius: 4
-                    border { color: "#7c6af5"; width: 1 }
+                    color:  parent.hovered ? Theme.palette.backgroundSecondary : "transparent"
+                    radius: Theme.spacing.tiny
+                    border { color: Theme.palette.primary; width: 1 }
                 }
                 height: 30
             }
@@ -134,16 +134,16 @@ Item {
             Rectangle {
                 id: errorBanner
                 anchors { left: parent.left; right: parent.right; top: parent.top }
-                height: errorBanner.visible ? errorText.implicitHeight + 16 : 0
+                height: errorBanner.visible ? errorText.implicitHeight + Theme.spacing.large : 0
                 visible: lezRegistryModel.error.length > 0
                 color: "#2a1111"
-                border { color: "#aa3333"; width: 1 }
+                border { color: Theme.palette.error; width: 1 }
 
                 Text {
                     id: errorText
                     anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 10 }
                     text: "⚠ " + lezRegistryModel.error
-                    color: "#ff8888"
+                    color: Theme.palette.error
                     font.pixelSize: 12
                     wrapMode: Text.WordWrap
                 }
@@ -152,19 +152,19 @@ Item {
             // Empty state
             Column {
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: Theme.spacing.medium
                 visible: !lezRegistryModel.loading && lezRegistryModel.count === 0 && lezRegistryModel.error.length === 0
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "⬡"
-                    color: "#3a3a5a"
+                    color: Theme.palette.textTertiary
                     font.pixelSize: 48
                 }
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: "No programs registered"
-                    color: "#555577"
+                    color: Theme.palette.textTertiary
                     font.pixelSize: 15
                 }
                 Button {
@@ -173,14 +173,14 @@ Item {
                     onClicked: lezRegistryModel.refresh()
                     contentItem: Text {
                         text: parent.text
-                        color: "#7c6af5"
+                        color: Theme.palette.primary
                         font.pixelSize: 13
                         horizontalAlignment: Text.AlignHCenter
                     }
                     background: Rectangle {
-                        color: parent.hovered ? "#2a2a4a" : "transparent"
-                        radius: 4
-                        border { color: "#7c6af5"; width: 1 }
+                        color: parent.hovered ? Theme.palette.backgroundSecondary : "transparent"
+                        radius: Theme.spacing.tiny
+                        border { color: Theme.palette.primary; width: 1 }
                     }
                 }
             }
@@ -192,9 +192,9 @@ Item {
                     right:  parent.right
                     top:    errorBanner.bottom
                     bottom: parent.bottom
-                    margins: 12
+                    margins: Theme.spacing.medium
                 }
-                spacing: 8
+                spacing: Theme.spacing.small
                 clip: true
                 model: lezRegistryModel
 
