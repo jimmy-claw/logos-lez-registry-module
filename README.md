@@ -1,254 +1,128 @@
-# logos-lez-registry-module
+# LEZ Program Registry Module
 
-A **Logos Core Qt6 plugin** that wraps the [`lez-registry-ffi`](https://github.com/jimmy-claw/lez-registry) C library and exposes on-chain LEZ Program Registry operations as `Q_INVOKABLE` methods callable by the Logos Core module system.
+A Logos Core Qt module for browsing, registering, and querying on-chain program metadata on the Logos Execution Zone.
 
-> **Logos Storage** (previously known as Codex) is used for IDL file storage. The module handles both registry queries and IDL upload/download transparently.
-
----
-
-## Features
-
-| Method | Description |
-|---|---|
-| `registerProgram(argsJson)` | Register a new program in the LEZ on-chain registry |
-| `updateProgram(argsJson)` | Update metadata for an existing entry (author-only) |
-| `listPrograms(argsJson)` | List all registered programs |
-| `getProgramByName(name)` | Query a program by its human-readable name |
-| `getProgramById(programId)` | Query a program by its on-chain ID |
-| `uploadIdl(argsJson)` | Upload an IDL file to Logos Storage, returns CID |
-| `downloadIdl(cid)` | Fetch and parse an IDL JSON from Logos Storage |
-| `version()` | Returns the version of the underlying FFI library |
-
-All methods accept/return JSON strings for seamless interoperability with
-[`LogosAPIClient::invokeRemoteMethod`](https://github.com/logos-co/logos-cpp-sdk).
-
-### Events emitted
-
-| Event | Payload |
-|---|---|
-| `programRegistered` | JSON with `tx_hash` |
-| `programUpdated` | JSON with `tx_hash` |
-| `idlUploaded` | JSON with `cid` |
-
----
+**Full stack:** QML UI → Qt C++ Plugin → C FFI → Rust → Sequencer
 
 ## Architecture
 
 ```
-Qt Plugin (C++)           C FFI (C ABI)             Rust
-LezRegistryModule  →  liblez_registry_ffi.so  →  lez-registry crate
-                                                   ↓
-                                           LEZ Sequencer (HTTP)
-                                           Logos Storage  (HTTP)
+┌─────────────────────────────────────────────┐
+│  Logos Core (logoscore)                     │
+│  ┌───────────────────────────────────────┐  │
+│  │  logos_host subprocess                │  │
+│  │  ┌─────────────────────────────────┐  │  │
+│  │  │  liblez_registry_module.so      │  │  │
+│  │  │  (Qt6 Plugin + QML UI)          │  │  │
+│  │  │  ┌───────────────────────────┐  │  │  │
+│  │  │  │  liblez_registry_ffi.so   │  │  │  │
+│  │  │  │  (Rust → C FFI)           │  │  │  │
+│  │  │  └───────────┬───────────────┘  │  │  │
+│  │  └──────────────┼──────────────────┘  │  │
+│  └─────────────────┼────────────────────┘  │
+└────────────────────┼───────────────────────┘
+                     │ JSON-RPC
+                     ▼
+              LEZ Sequencer
 ```
 
-Follows the [`logos-execution-zone-module`](https://github.com/logos-blockchain/logos-execution-zone-module) pattern:
-- Inherits `QObject`, `PluginInterface`, `ILezRegistryModule`
-- `Q_PLUGIN_METADATA` embeds `metadata.json` for Logos Core discovery
-- All public methods are `Q_INVOKABLE`
-- Events emitted via `eventResponse(QString, QVariantList)` signal
+## Quick Start
 
----
+### Prerequisites
 
-## Repository Structure
+- [Nix](https://nixos.org/download.html) with flakes enabled
 
-```
-logos-lez-registry-module/
-├── CMakeLists.txt              # CMake build (C++20, Qt6, logos-cpp-sdk)
-├── flake.nix                   # Nix flake for reproducible builds
-├── justfile                    # Common tasks (build, fmt, inspect)
-├── metadata.json               # Logos Core plugin descriptor
-├── README.md
-├── include/
-│   └── lez_registry.h          # C FFI header (copied from lez-registry-ffi)
-└── src/
-    ├── i_lez_registry_module.h # Pure virtual public interface
-    ├── lez_registry_module.h   # Implementation class header
-    ├── lez_registry_module.cpp # Implementation
-    └── plugin.cpp              # Qt plugin entry point (minimal)
-```
-
----
-
-## Prerequisites
-
-| Dependency | Notes |
-|---|---|
-| Qt 6.x | `qtbase`, `qtremoteobjects` |
-| [logos-cpp-sdk](https://github.com/logos-co/logos-cpp-sdk) | Provides `PluginInterface`, `LogosAPI`, `LogosAPIClient` |
-| [lez-registry-ffi](https://github.com/jimmy-claw/lez-registry) | Rust C FFI — `liblez_registry_ffi.so` |
-| CMake ≥ 3.20, Ninja | Build toolchain |
-
----
-
-## Build
-
-### With Nix (recommended)
+### Build
 
 ```bash
-# Once lez-registry-ffi has a flake input wired in:
-nix build
+# Clone
+git clone git@github.com:jimmy-claw/logos-lez-registry-module.git
+cd logos-lez-registry-module
 
-# Inspect plugin metadata
-nix run '.#inspect-module'
+# Build plugin only
+nix build '.#lib' --extra-experimental-features 'nix-command flakes'
 
-# Dev shell
-nix develop
+# Build standalone app (includes logoscore, logos_host, all deps)
+nix build '.#app' --extra-experimental-features 'nix-command flakes'
 ```
 
-> **Note:** The `lez-registry-ffi` Nix input is not yet wired into `flake.nix`.
-> Once the `lez-registry` crate exposes a `flake.nix`, add it as an input and
-> fill in the `cmakeFlags` for `LEZ_REGISTRY_LIB` / `LEZ_REGISTRY_INCLUDE`.
-
-### Without Nix (manual)
+### Test
 
 ```bash
-# 1. Build lez-registry-ffi
-cd /path/to/lez-registry/lez-registry-ffi
-cargo build --release
+# Test 1: Module loads without crash
+QT_QPA_PLATFORM=offscreen ./result/bin/logoscore \
+  --modules-dir ./result/modules \
+  --load-modules liblez_registry_module
 
-# 2. Build this module
-export LOGOS_CORE_ROOT=/path/to/logos-cpp-sdk/result
-export LEZ_REGISTRY_LIB=/path/to/lez-registry/lez-registry-ffi/target/release
-export LEZ_REGISTRY_INCLUDE=/path/to/lez-registry/lez-registry-ffi/include
-
-just build
-# or:
-cmake -S . -B build -G Ninja \
-  -DLOGOS_CORE_ROOT="$LOGOS_CORE_ROOT" \
-  -DLEZ_REGISTRY_LIB="$LEZ_REGISTRY_LIB" \
-  -DLEZ_REGISTRY_INCLUDE="$LEZ_REGISTRY_INCLUDE"
-cmake --build build --parallel
-```
-
----
-
-## Usage
-
-### Headless / logoscore
-
-```bash
-# Copy module and FFI lib into a modules directory
-mkdir -p modules
-cp build/liblez_registry_module.so modules/
-cp /path/to/lez-registry-ffi/target/release/liblez_registry_ffi.so modules/
-
-# List all registered programs
-logoscore -m ./modules \
+# Test 2: Call FFI through the full pipeline
+QT_QPA_PLATFORM=offscreen ./result/bin/logoscore \
+  --modules-dir ./result/modules \
   --load-modules liblez_registry_module \
-  --call 'liblez_registry_module.listPrograms({"sequencer_url":"http://localhost:9000"})'
+  --call "liblez_registry_module.listPrograms({})"
 
-# Register a program
-logoscore -m ./modules \
-  --load-modules liblez_registry_module \
-  --call 'liblez_registry_module.registerProgram({
-    "sequencer_url": "http://localhost:9000",
-    "wallet_path": "/path/to/wallet",
-    "program_id": "abc123",
-    "name": "my-program",
-    "version": "0.1.0"
-  })'
-
-# Upload IDL to Logos Storage and get CID
-logoscore -m ./modules \
-  --load-modules liblez_registry_module \
-  --call 'liblez_registry_module.uploadIdl({
-    "logos_storage_url": "http://localhost:8080",
-    "file_path": "/path/to/program.idl.json"
-  })'
-
-# Download IDL by CID
-logoscore -m ./modules \
-  --load-modules liblez_registry_module \
-  --call 'liblez_registry_module.downloadIdl("bafybeiabc...")'
+# Test 3: Run standalone app (needs display or Xvfb)
+./result/bin/logos-lez-registry-app
 ```
 
-### From another Logos Core module
+### Output Layout
 
-```cpp
-// In YourModule::initLogos():
-m_registry = logosAPI->getClient("liblez_registry_module");
-
-// List programs
-QVariant programs = m_registry->invokeRemoteMethod(
-    "liblez_registry_module",
-    "listPrograms",
-    R"({"sequencer_url":"http://localhost:9000"})"
-);
-
-// Subscribe to registration events
-m_registry->onEvent(remoteObject, this, "programRegistered",
-    [this](const QString& event, const QVariantList& data) {
-        qInfo() << "New program registered:" << data;
-    });
+```
+result/
+├── bin/
+│   ├── logos-lez-registry-app   # Standalone Qt application
+│   ├── logoscore                # Logos Core executable
+│   └── logos_host               # Plugin host process
+├── lib/
+│   ├── liblogos_core.so         # Logos Core library
+│   ├── liblogos_sdk.a           # Logos SDK
+│   └── liblez_registry_ffi.so   # Rust FFI library
+├── modules/
+│   ├── capability_module_plugin.so
+│   └── liblez_registry_module.so
+└── qml/
+    ├── LezRegistryView.qml      # Main registry browser
+    ├── ProgramCard.qml           # Program list card
+    ├── ProgramDetail.qml         # Program detail view
+    └── RegisterForm.qml          # Program registration form
 ```
 
----
+## QML Views
 
-## JSON API Reference
+| View | Description |
+|------|-------------|
+| `LezRegistryView` | Main browser — lists registered programs with search |
+| `ProgramCard` | Card component showing program name, version, author |
+| `ProgramDetail` | Detail view with full metadata, IDL viewer |
+| `RegisterForm` | Form to register a new program on-chain |
 
-### `registerProgram(argsJson)`
+## FFI Functions
 
-```json
-{
-  "sequencer_url": "http://localhost:9000",
-  "wallet_path": "/path/to/wallet",
-  "program_id": "hex_or_comma_u32s",
-  "name": "my-program",
-  "version": "0.1.0",
-  "idl_cid": "bafy...",
-  "description": "Optional description",
-  "tags": ["governance", "token"]
-}
-```
+The module exposes these operations via C FFI:
 
-Returns: `{ "success": true, "tx_hash": "0x..." }`
+| Function | Description |
+|----------|-------------|
+| `lez_registry_list` | List all registered programs |
+| `lez_registry_get_by_id` | Get program by ID (PDA derivation) |
+| `lez_registry_get_by_name` | Get program by name (requires indexer) |
+| `lez_registry_register` | Register a new program |
+| `lez_registry_update` | Update program metadata |
+| `lez_storage_download` | Download from Logos Storage |
+| `lez_storage_upload` | Upload to Logos Storage |
+| `lez_storage_fetch_idl` | Fetch program IDL by CID |
 
-### `listPrograms(argsJson)`
+## CI/CD
 
-```json
-{ "sequencer_url": "http://localhost:9000" }
-```
+Every push to `main` triggers a GitHub Actions workflow that:
+1. Builds both `.#lib` and `.#app` via Nix
+2. Creates a GitHub Release with pre-built artifacts
+3. PRs are build-tested without creating releases
 
-Returns:
-```json
-{
-  "success": true,
-  "programs": [
-    {
-      "program_id": "...",
-      "name": "lez-multisig",
-      "version": "0.1.0",
-      "author": "0x...",
-      "idl_cid": "bafy...",
-      "description": "...",
-      "tags": ["governance"]
-    }
-  ]
-}
-```
+## Related Repos
 
-### Error responses
-
-All methods return `{ "success": false, "error": "<message>" }` on failure.
-
----
-
-## Development
-
-```bash
-# Format code
-just fmt
-
-# Clean and rebuild
-just rebuild
-
-# Inspect Qt plugin metadata
-just inspect
-```
-
----
+- [lez-registry](https://github.com/jimmy-claw/lez-registry) — Rust core + FFI + CLI
+- [logos-liblogos](https://github.com/logos-co/logos-liblogos) — Logos Core framework
+- [logos-cpp-sdk](https://github.com/logos-co/logos-cpp-sdk) — C++ SDK for modules
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT
