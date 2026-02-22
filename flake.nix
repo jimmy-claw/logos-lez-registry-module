@@ -9,7 +9,7 @@
 
     logos-module-viewer.url = "github:logos-co/logos-module-viewer";
 
-    lez-registry-ffi.url = "github:jimmy-claw/lez-registry?dir=lez-registry-ffi";
+    lez-registry-ffi.url = "github:jimmy-claw/lez-registry/jimmy/ffi-implementation?dir=lez-registry-ffi";
   };
 
   outputs =
