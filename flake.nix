@@ -2,21 +2,14 @@
   description = "logos-lez-registry-module — Qt6 Logos Core plugin for the LEZ Program Registry";
 
   inputs = {
-    # Pin nixpkgs to match logos-liblogos (avoids Qt version mismatches)
     nixpkgs.follows = "logos-liblogos/nixpkgs";
 
     logos-liblogos.url = "github:logos-co/logos-liblogos";
     logos-core.url     = "github:logos-co/logos-cpp-sdk";
 
-    # logos-module-viewer — for the inspect-module app
     logos-module-viewer.url = "github:logos-co/logos-module-viewer";
 
-    # lez-registry-ffi Nix input is intentionally omitted for now.
-    # Once lez-registry-ffi has its own flake.nix, add:
-    #
-    #   lez-registry-ffi.url = "github:jimmy-claw/lez-registry?dir=lez-registry-ffi";
-    #
-    # and wire it into cmakeFlags below.
+    lez-registry-ffi.url = "github:jimmy-claw/lez-registry?dir=lez-registry-ffi";
   };
 
   outputs =
@@ -24,7 +17,9 @@
       self,
       nixpkgs,
       logos-core,
+      logos-liblogos,
       logos-module-viewer,
+      lez-registry-ffi,
       ...
     }:
     let
@@ -48,14 +43,8 @@
           pkgs     = mkPkgs system;
           llvmPkgs = pkgs.llvmPackages;
 
-          logosCore = logos-core.packages.${system}.default;
-
-          # ── TODO: wire in lez-registry-ffi once it has a flake ─────────────
-          # lezRegistryFfi = lez-registry-ffi.packages.${system}.default;
-          #
-          # For now, LEZ_REGISTRY_LIB / LEZ_REGISTRY_INCLUDE must be supplied
-          # as environment variables or via `nix develop` overrides.
-          # ───────────────────────────────────────────────────────────────────
+          logosCore      = logos-core.packages.${system}.default;
+          lezRegistryFfi = lez-registry-ffi.packages.${system}.default;
 
           lezRegistryModule = pkgs.stdenv.mkDerivation {
             pname   = "lez-registry-module";
@@ -75,6 +64,7 @@
               pkgs.qt6.qttools
               llvmPkgs.clang
               llvmPkgs.libclang
+              lezRegistryFfi
             ]
             ++ lib.optionals pkgs.stdenv.isDarwin [
               pkgs.libiconv
@@ -89,12 +79,8 @@
 
             cmakeFlags = [
               "-DLOGOS_CORE_ROOT=${logosCore}"
-              # When lez-registry-ffi flake is ready, replace with:
-              # "-DLEZ_REGISTRY_LIB=${lezRegistryFfi}/lib"
-              # "-DLEZ_REGISTRY_INCLUDE=${lezRegistryFfi}/include"
-              #
-              # Until then, the build requires LEZ_REGISTRY_LIB to be set
-              # in the environment (see devShell below).
+              "-DLEZ_REGISTRY_LIB=${lezRegistryFfi}/lib"
+              "-DLEZ_REGISTRY_INCLUDE=${lezRegistryFfi}/include"
             ];
 
             meta = {
@@ -110,7 +96,6 @@
         }
       );
 
-      # ── inspect-module app ─────────────────────────────────────────────────
       apps = forAll (
         system:
         let
@@ -136,13 +121,13 @@
         }
       );
 
-      # ── dev shell ──────────────────────────────────────────────────────────
       devShells = forAll (
         system:
         let
-          pkgs      = mkPkgs system;
-          pkg       = self.packages.${system}.default;
-          logosCore = logos-core.packages.${system}.default;
+          pkgs           = mkPkgs system;
+          pkg            = self.packages.${system}.default;
+          logosCore      = logos-core.packages.${system}.default;
+          lezRegistryFfi = lez-registry-ffi.packages.${system}.default;
         in
         {
           default = pkgs.mkShell {
@@ -150,23 +135,18 @@
 
             inherit (pkg) LIBCLANG_PATH CLANG_PATH;
 
-            LOGOS_CORE_ROOT = "${logosCore}";
-            # Set these in your shell once lez-registry-ffi is built:
-            # LEZ_REGISTRY_LIB     = "/path/to/lez-registry-ffi/target/release";
-            # LEZ_REGISTRY_INCLUDE = "/path/to/lez-registry-ffi/include";
+            LOGOS_CORE_ROOT      = "${logosCore}";
+            LEZ_REGISTRY_LIB     = "${lezRegistryFfi}/lib";
+            LEZ_REGISTRY_INCLUDE = "${lezRegistryFfi}/include";
 
             shellHook = ''
-              BLUE='\e[1;34m'
-              GREEN='\e[1;32m'
-              YELLOW='\e[1;33m'
-              RESET='\e[0m'
-
-              echo -e "\n''${BLUE}=== logos-lez-registry-module Dev Shell ===''${RESET}"
-              echo -e "''${GREEN}LOGOS_CORE_ROOT:''${RESET}      $LOGOS_CORE_ROOT"
-              echo -e "''${YELLOW}LEZ_REGISTRY_LIB:''${RESET}    ''${LEZ_REGISTRY_LIB:-<not set — required for build>}"
-              echo -e "''${YELLOW}LEZ_REGISTRY_INCLUDE:''${RESET} ''${LEZ_REGISTRY_INCLUDE:-<not set — using bundled header>}"
-              echo -e "''${BLUE}------------------------------------------''${RESET}"
-              echo -e "Run: just build"
+              echo ""
+              echo "=== logos-lez-registry-module Dev Shell ==="
+              echo "LOGOS_CORE_ROOT:      $LOGOS_CORE_ROOT"
+              echo "LEZ_REGISTRY_LIB:     $LEZ_REGISTRY_LIB"
+              echo "LEZ_REGISTRY_INCLUDE: $LEZ_REGISTRY_INCLUDE"
+              echo "-------------------------------------------"
+              echo "Run: just build"
             '';
           };
         }

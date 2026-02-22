@@ -1,5 +1,6 @@
 #include "lez_registry_module.h"
-#include "logos_api_client.h"
+#include <cpp/logos_api_provider.h>
+#include <cpp/logos_api_client.h>
 
 #include <QDebug>
 #include <QJsonDocument>

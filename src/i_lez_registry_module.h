@@ -113,7 +113,7 @@ public:
     /**
      * Returns the version string of the underlying lez-registry-ffi library.
      */
-    virtual QString version() = 0;
+    virtual QString version() const = 0;
 };
 
 #define ILezRegistryModule_iid "org.logos.ilezregistrymodule"
