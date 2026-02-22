@@ -1,0 +1,9 @@
+{
+  "name": "liblez_registry_module",
+  "version": "0.1.0",
+  "description": "LEZ Program Registry — browse, register, and query on-chain program metadata",
+  "author": "jimmy-claw",
+  "type": "blockchain",
+  "dependencies": [],
+  "include": ["liblez_registry_ffi.so", "liblez_registry_ffi.dylib"]
+}
