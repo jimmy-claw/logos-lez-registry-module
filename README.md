@@ -1,4 +1,7 @@
 # LEZ Program Registry Module
+n## Screenshot
+
+![Registry List](docs/images/registry-list.png)
 
 A Logos Core Qt module for browsing, registering, and querying on-chain program metadata on the Logos Execution Zone.
 
