@@ -1,0 +1,2 @@
+set(__QT_DEPLOY_TARGET_lez_registry_module_FILE /home/jimmy/logos-lez-registry-module/build/liblez_registry_module.so)
+set(__QT_DEPLOY_TARGET_lez_registry_module_TYPE MODULE_LIBRARY)

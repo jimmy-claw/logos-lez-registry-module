@@ -13,6 +13,10 @@ extern "C" {
 #include <QObject>
 #include <QString>
 #include <QVariantList>
+#include <QQmlEngine>
+#include <QFutureWatcher>
+
+class ProgramListModel;
 
 /**
  * LezRegistryModule — Qt6 plugin implementation of ILezRegistryModule.
@@ -21,11 +25,8 @@ extern "C" {
  * exposes on-chain program registry operations as Q_INVOKABLE methods
  * so that Logos Core can discover and call them via Qt Remote Objects.
  *
- * Follow the logos-blockchain-module / logos-execution-zone-module pattern:
- *   - Inherit QObject, PluginInterface, ILezRegistryModule
- *   - Declare Q_PLUGIN_METADATA with the embedded metadata.json
- *   - All public API methods are Q_INVOKABLE
- *   - Emit eventResponse(QString, QVariantList) for async notifications
+ * Also owns the ProgramListModel exposed to QML as a context property,
+ * and provides async helper invokables used by LezRegistryView.qml.
  */
 class LezRegistryModule final : public QObject, public PluginInterface, public ILezRegistryModule {
     Q_OBJECT
@@ -58,6 +59,20 @@ public:
     Q_INVOKABLE QString uploadIdl(const QString& argsJson) override;
     Q_INVOKABLE QString downloadIdl(const QString& cid) override;
 
+    // ── QML-facing async helpers ──────────────────────────────────────────────
+
+    /**
+     * Async: fetch IDL by CID from Logos Storage.
+     * Emits idlFetched(content, error) when done.
+     */
+    Q_INVOKABLE void fetchIdlAsync(const QString& cid);
+
+    /**
+     * Async: register a program.
+     * Emits programRegistered() on success, or registerFailed(error) on failure.
+     */
+    Q_INVOKABLE void registerAsync(const QString& argsJson);
+
 signals:
     /**
      * Emitted for async registry events (e.g. "programRegistered", "programUpdated").
@@ -66,36 +81,29 @@ signals:
      */
     void eventResponse(const QString& eventName, const QVariantList& data);
 
+    /** Emitted when fetchIdlAsync() completes. */
+    void idlFetched(const QString& content, const QString& error);
+
+    /** Emitted by registerAsync() on success. */
+    void programRegistered();
+
+    /** Emitted by registerAsync() on failure. */
+    void registerFailed(const QString& error);
+
 private:
     LogosAPIClient* m_client = nullptr;
+    ProgramListModel* m_model = nullptr;
+    QQmlEngine* m_qmlEngine = nullptr;
 
-    /**
-     * Default Logos Storage URL. Can be overridden via module config or
-     * by embedding "logos_storage_url" in the args JSON.
-     */
+    QFutureWatcher<QString>* m_idlWatcher      = nullptr;
+    QFutureWatcher<QString>* m_registerWatcher = nullptr;
+
     QString m_defaultStorageUrl;
-
-    /**
-     * Default sequencer URL. Can be overridden per-call via args JSON.
-     */
     QString m_defaultSequencerUrl;
 
-    /**
-     * Convenience: call a lez_registry_ffi function that takes a JSON string
-     * and returns a heap-allocated JSON string.  Converts the result to
-     * QString and frees the C string automatically.
-     */
     using FfiJsonFn = char* (*)(const char*);
     static QString callFfi(FfiJsonFn fn, const QString& argsJson);
 
-    /**
-     * Build a minimal args JSON that includes the default sequencer URL
-     * merged with any caller-supplied fields.
-     */
     QString mergeWithDefaults(const QString& argsJson) const;
-
-    /**
-     * Emit a registry event to the Logos Core event bus.
-     */
     void emitEvent(const QString& eventName, const QVariantList& data);
 };

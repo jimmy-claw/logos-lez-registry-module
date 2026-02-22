@@ -1,0 +1,2 @@
+/home/jimmy/logos-lez-registry-module/build/lez_registry_module_autogen/include/../UVLADIE3JM/moc_lez_registry_module.cpp.json
+/home/jimmy/logos-lez-registry-module/build/lez_registry_module_autogen/include/../UVLADIE3JM/moc_program_list_model.cpp.json

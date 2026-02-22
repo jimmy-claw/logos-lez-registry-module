@@ -1,0 +1,208 @@
+{
+    "classes": [
+        {
+            "className": "LezRegistryModule",
+            "interfaces": [
+                [
+                    {
+                        "className": "PluginInterface",
+                        "id": "\"com.example.PluginInterface\""
+                    }
+                ]
+            ],
+            "lineNumber": 31,
+            "methods": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "logosAPIInstance",
+                            "type": "LogosAPI*"
+                        }
+                    ],
+                    "index": 4,
+                    "name": "initLogos",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "argsJson",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 5,
+                    "name": "registerProgram",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "argsJson",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 6,
+                    "name": "updateProgram",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "argsJson",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 7,
+                    "name": "listPrograms",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "name",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 8,
+                    "name": "getProgramByName",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "programId",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 9,
+                    "name": "getProgramById",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "argsJson",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 10,
+                    "name": "uploadIdl",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "cid",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 11,
+                    "name": "downloadIdl",
+                    "returnType": "QString"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "cid",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 12,
+                    "name": "fetchIdlAsync",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "argsJson",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 13,
+                    "name": "registerAsync",
+                    "returnType": "void"
+                }
+            ],
+            "object": true,
+            "qualifiedClassName": "LezRegistryModule",
+            "signals": [
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "eventName",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "data",
+                            "type": "QVariantList"
+                        }
+                    ],
+                    "index": 0,
+                    "name": "eventResponse",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "content",
+                            "type": "QString"
+                        },
+                        {
+                            "name": "error",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 1,
+                    "name": "idlFetched",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "index": 2,
+                    "name": "programRegistered",
+                    "returnType": "void"
+                },
+                {
+                    "access": "public",
+                    "arguments": [
+                        {
+                            "name": "error",
+                            "type": "QString"
+                        }
+                    ],
+                    "index": 3,
+                    "name": "registerFailed",
+                    "returnType": "void"
+                }
+            ],
+            "superClasses": [
+                {
+                    "access": "public",
+                    "name": "QObject"
+                },
+                {
+                    "access": "public",
+                    "name": "PluginInterface"
+                },
+                {
+                    "access": "public",
+                    "name": "ILezRegistryModule"
+                }
+            ]
+        }
+    ],
+    "inputFile": "lez_registry_module.h",
+    "outputRevision": 69
+}

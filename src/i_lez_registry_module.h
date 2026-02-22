@@ -2,7 +2,7 @@
 #define I_LEZ_REGISTRY_MODULE_H
 
 #include <QString>
-#include <core/interface.h>
+#include <interface.h>
 
 /**
  * ILezRegistryModule — Public interface for the LEZ Program Registry Logos Core module.

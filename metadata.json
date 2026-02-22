@@ -5,5 +5,12 @@
   "author": "jimmy-claw",
   "type": "blockchain",
   "dependencies": [],
-  "include": ["liblez_registry_ffi.so", "liblez_registry_ffi.dylib"]
+  "include": ["liblez_registry_ffi.so", "liblez_registry_ffi.dylib"],
+  "ui": {
+    "component": "LezRegistryView",
+    "qmlUrl": "qrc:/lez-registry/LezRegistryView.qml",
+    "contextProperties": ["lezRegistryModel", "lezRegistryModule"],
+    "title": "LEZ Registry",
+    "icon": "⬡"
+  }
 }
