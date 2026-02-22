@@ -90,39 +90,45 @@ void LezRegistryModule::initLogos(LogosAPI* logosAPIInstance) {
     m_model = new ProgramListModel(this);
     m_model->setSequencerUrl(m_defaultSequencerUrl);
 
-    if (logosAPI) {
-        logosAPI->getProvider()->registerObject(name(), this);
+    if (!logosAPI) {
+        qWarning() << "LezRegistryModule: initLogos called with null LogosAPI";
+        qInfo() << "LezRegistryModule: initialized (headless). FFI version:" << version();
+        return;
+    }
 
-        m_client = logosAPI->getClient(name());
-        if (!m_client) {
-            qWarning() << "LezRegistryModule: failed to get client handle for" << name();
-        }
+    // NOTE: Do NOT call logosAPI->getProvider()->registerObject() here.
+    // In logos_host subprocess mode, the SDK wraps us in a ModuleProxy
+    // that handles registration automatically. Calling registerObject()
+    // directly causes a segfault in the QHash destructor.
 
-        const QString storageProp = logosAPI->property("logosStorageUrl").toString();
-        if (!storageProp.isEmpty()) {
-            m_defaultStorageUrl = storageProp;
-        }
-        const QString seqProp = logosAPI->property("sequencerUrl").toString();
-        if (!seqProp.isEmpty()) {
-            m_defaultSequencerUrl = seqProp;
-            m_model->setSequencerUrl(m_defaultSequencerUrl);
-        }
+    m_client = logosAPI->getClient(name());
+    if (!m_client) {
+        qWarning() << "LezRegistryModule: failed to get client handle for" << name();
+    }
 
-        // Expose model and module to QML engine if available
-        m_qmlEngine = logosAPI->property("qmlEngine").value<QQmlEngine*>();
-        if (m_qmlEngine) {
-            m_qmlEngine->rootContext()->setContextProperty(
-                QStringLiteral("lezRegistryModel"), m_model);
-            m_qmlEngine->rootContext()->setContextProperty(
-                QStringLiteral("lezRegistryModule"), this);
-            qInfo() << "LezRegistryModule: QML context properties registered";
-        } else {
-            qWarning() << "LezRegistryModule: no QML engine available — context properties not set";
-        }
+    const QString storageProp = logosAPI->property("logosStorageUrl").toString();
+    if (!storageProp.isEmpty()) {
+        m_defaultStorageUrl = storageProp;
+    }
+    const QString seqProp = logosAPI->property("sequencerUrl").toString();
+    if (!seqProp.isEmpty()) {
+        m_defaultSequencerUrl = seqProp;
+        m_model->setSequencerUrl(m_defaultSequencerUrl);
+    }
+
+    // Expose model and module to QML engine if available
+    m_qmlEngine = logosAPI->property("qmlEngine").value<QQmlEngine*>();
+    if (m_qmlEngine) {
+        m_qmlEngine->rootContext()->setContextProperty(
+            QStringLiteral("lezRegistryModel"), m_model);
+        m_qmlEngine->rootContext()->setContextProperty(
+            QStringLiteral("lezRegistryModule"), this);
+        qInfo() << "LezRegistryModule: QML context properties registered";
     }
 
     qInfo() << "LezRegistryModule: initialized. FFI version:" << version();
 }
+
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
