@@ -2,7 +2,7 @@
  * lez_registry.h — C FFI interface for the LEZ Program Registry
  *
  * Enables Logos Core Qt plugins to interact with the LEZ registry
- * and Logos Storage without depending on Rust directly.
+ * and Logos Storage (Codex) without depending on Rust directly.
  *
  * All functions take/return JSON strings (UTF-8, null-terminated).
  * Caller must free returned strings with lez_registry_free_string().
@@ -100,11 +100,10 @@ char* lez_registry_get_by_name(const char* args_json);
  */
 char* lez_registry_get_by_id(const char* args_json);
 
-/* ── Logos Storage Operations ────────────────────────────────────────────── */
+/* ── Logos Storage (Codex) Operations ───────────────────────────────────── */
 
 /**
  * Upload a file to Logos Storage, returns CID.
- * (Logos Storage was previously known as Codex.)
  *
  * args_json: {
  *   "logos_storage_url": "http://localhost:8080",
